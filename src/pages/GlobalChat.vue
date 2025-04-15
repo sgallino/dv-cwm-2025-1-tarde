@@ -1,27 +1,7 @@
 <script>
+import { nextTick } from 'vue';
 import MainH1 from '../components/MainH1.vue';
-import { saveGlobalChatMessage } from '../services/global-chat';
-
-const exampleMessages = [
-    {
-        id: 1,
-        email: 'test@user.com',
-        body: '¡Hola mundo!',
-        created_at: new Date(),
-    },
-    {
-        id: 2,
-        email: 'sara@za.com',
-        body: 'Hola, ¿qué tal?',
-        created_at: new Date(),
-    },
-    {
-        id: 3,
-        email: 'pepe@trueno.com',
-        body: 'holaaaaaaaaa todo bien????',
-        created_at: new Date(),
-    },
-];
+import { getLastMessages, saveGlobalChatMessage, subscribeToGlobalChatNewMessages } from '../services/global-chat';
 
 export default {
     name: 'GlobalChat',
@@ -34,7 +14,7 @@ export default {
     */
     data: function() {
         return {
-            messages: exampleMessages,
+            messages: [],
             newMessage: {
                 email: '',
                 body: '',
@@ -51,20 +31,54 @@ export default {
     // }
     methods: {
         async sendMessage() {
-            // this.messages.push({
-            //     id: this.messages.length + 1,
-            //     email: this.newMessage.email,
-            //     body: this.newMessage.body,
-            //     created_at: new Date(),
-            // });
             try {
                 await saveGlobalChatMessage({...this.newMessage});
+                // Versión para 'Broadcast'.
+                // const message = {
+                //     id: this.messages.length + 1,
+                //     email: this.newMessage.email,
+                //     body: this.newMessage.body,
+                //     created_at: new Date(),
+                // };
+                // await saveGlobalChatMessage(message);
                 this.newMessage.body = "";
             } catch (error) {
                 // TODO: Manage the error.
                 console.error("[GlobalChat.vue sendMessage] Error al enviar el mensaje: ", error);
             }
         },
+    },
+    async mounted() {
+        // Pedimos recibir los nuevos mensajes para agregarlos en el array de mensajes.
+        subscribeToGlobalChatNewMessages(async newMessageReceived => {
+            this.messages.push(newMessageReceived);
+            await nextTick();
+            this.$refs.chatContainer.scrollTop = this.$refs.chatContainer.scrollHeight;
+        });
+        
+        // Traemos los mensajes iniciales.
+        try {
+            this.messages = await getLastMessages();
+
+            // Movemos el scroll del elemento del contenedor del chat al final.
+            console.log(this.$refs.chatContainer);
+            // nextTick() es una función que nos permite esperar al próximo frame de redibujo de Vue.
+            // ¿Por qué lo necesitamos acá?
+            // Nuestra intención es que traigamos los mensajes, se agreguen en el DOM, y luego de que se hayan agregado,
+            // se calcule el alto del scroll del contenedor del chat, y lo movamos al final.
+            // Esos son dos pasos diferentes en cuando al "redraw" del browser. Para que el scroll del contenedor se
+            // actualice, necesitamos que el browser renderice primero en el DOM todos los mensajes.
+            // Por defecto, Vue no actualiza el DOM instantánmeamente cada vez que modificamos algo del componente.
+            // Para optimizar la performance (ya que el "redraw" es de las tareas más intensivas para el browsers), 
+            // Vue "agrupa" (batch) varias acciones de modificación del DOM, y las ejecuta todas juntas.
+            // En la mayoría de los casos, es el camino ideal para seguir.
+            // Pero hay casos, como este, donde antes de realizar otra acción, necesito sí o sí que lo anterior se
+            // ejecute. Ahí es donde necesitamos nextTick().
+            await nextTick();
+            this.$refs.chatContainer.scrollTop = this.$refs.chatContainer.scrollHeight;
+        } catch (error) {
+            // TODO:
+        }
     }
 }
 </script>
@@ -73,7 +87,10 @@ export default {
     <MainH1>Chat Global</MainH1>
 
     <div class="flex gap-4">
-        <div class="w-9/12 min-h-100 p-4 border border-gray-400 rounded">
+        <div 
+            ref="chatContainer"
+            class="overflow-y-auto w-9/12 h-100 p-4 border border-gray-400 rounded"
+        >
             <h2 class="sr-only">Lista de Mensajes</h2>
 
             <ul>
@@ -121,8 +138,7 @@ export default {
                     <label for="body" class="block mb-2">Mensaje:</label>
                     <textarea
                         id="body"
-                        class="w-full
-                        px-4 py-2 border border-gray-400 rounded"
+                        class="w-full px-4 py-2 border border-gray-400 rounded"
                         v-model="newMessage.body"
                     ></textarea>
                 </div>
