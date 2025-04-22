@@ -84,7 +84,7 @@ export default {
 </script>
 
 <template>
-    <MainH1>Chat Global</MainH1>
+    <MainH1>Chat global</MainH1>
 
     <div class="flex gap-4">
         <div 

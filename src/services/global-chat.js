@@ -28,7 +28,7 @@ export async function getLastMessages() {
  * @param {(object) => void} callback 
  */
 export async function subscribeToGlobalChatNewMessages(callback) {
-    // Acá como canal usamos el nombre de la *tabla*.
+    // Acá como canal podemos poner lo que queramos, en nuestro caso, usamos el nombre de la *tabla*.
     const chatChannel = supabase.channel('global_chat');
     // Configuramos el listener con el método "on()".
     chatChannel.on(

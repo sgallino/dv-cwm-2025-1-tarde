@@ -6,12 +6,34 @@
 // Si estamos usando la Options API, necesitamos además de importar el componente, declararlo en el objeto exportado.
 // Los componentes importados correctamente, se pueden utilizar como etiquetas en el <template>.
 import Home from './pages/Home.vue';
+import { logout, subscribeToAuth } from './services/auth';
 
 export default {
     // name permite configurar el nombre del componente. Es opcional.
     name: 'App',
     // components lleva un objeto con los componentes que se van a utilizar en este componente.
     components: { Home },
+    data() {
+        return {
+            user: {
+                id: null,
+                email: null,
+            }
+        }
+    },
+    methods: {
+        // handleLogin(userData) {
+        //     this.user = userData;
+        // }
+        handleLogout() {
+            logout();
+        }
+    },
+    async mounted() {
+        // Nos suscribimos al estado de autenticación.
+        // TODO: Proteger las rutas, y hacer el perfil del usuario :)
+        subscribeToAuth(userData => this.user = userData);
+    }
 }
 </script>
 
@@ -37,24 +59,40 @@ export default {
             background-color: #fff  => bg-white
     -->
     <nav class="flex gap-8 p-4 bg-slate-300">
-        <a class="text-lg" href="#">DV Social</a>
+        <router-link class="text-lg" to="/">DV Social</router-link>
         <ul class="flex gap-4">
             <li>
                 <!-- <RouterLink to="/">Home</RouterLink> -->
                 <router-link to="/">Home</router-link>
             </li>
-            <li>
-                <router-link to="/chat-global">Chat Global</router-link>
-            </li>
-            <li>
-                <router-link to="/ingresar">Iniciar Sesión</router-link>
-            </li>
-            <li>
-                <router-link to="/registro">Registrarse</router-link>
-            </li>
+            <template v-if="user.id === null">
+                <li>
+                    <router-link to="/ingresar">Iniciar Sesión</router-link>
+                </li>
+                <li>
+                    <router-link to="/registro">Registrarse</router-link>
+                </li>
+            </template>
+            <template v-else>
+                <li>
+                    <router-link to="/chat-global">Chat Global</router-link>
+                </li>
+                <li>
+                    <form 
+                        action="#"
+                        @submit.prevent="handleLogout"
+                    >
+                        <button type="submit">{{ user.email }} (Cerrar sesión)</button>
+                    </form>
+                </li>
+            </template>
         </ul>
     </nav>
     <div class="container mx-auto p-4">
+        <!-- Agregamos el listener del evento login del componente Login. -->
+        <!-- <router-view
+            @login="handleLogin"
+        /> -->
         <router-view />
         <!-- <RouterView /> -->
     </div>
