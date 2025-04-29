@@ -17,7 +17,7 @@ export async function getLastMessages() {
         throw error;
     }
 
-    console.log("[global-chat.js getLastMessages] Data de los mensajes: ", data);
+    // console.log("[global-chat.js getLastMessages] Data de los mensajes: ", data);
     data.reverse();
     return data;
 }
@@ -45,7 +45,7 @@ export async function subscribeToGlobalChatNewMessages(callback) {
         },
         // La propiedad con los datos del nuevo mensaje es "new".
         data => {
-            console.log("¡Nuevo mensaje! Data: ", data);
+            // console.log("¡Nuevo mensaje! Data: ", data);
             
             callback(data.new);
         },

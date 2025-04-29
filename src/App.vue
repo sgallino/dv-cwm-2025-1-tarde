@@ -5,6 +5,7 @@
 // Si queremos usar otros componentes, primero necesitamos importarlos.
 // Si estamos usando la Options API, necesitamos además de importar el componente, declararlo en el objeto exportado.
 // Los componentes importados correctamente, se pueden utilizar como etiquetas en el <template>.
+import MainNav from './components/MainNav.vue';
 import Home from './pages/Home.vue';
 import { logout, subscribeToAuth } from './services/auth';
 
@@ -12,28 +13,28 @@ export default {
     // name permite configurar el nombre del componente. Es opcional.
     name: 'App',
     // components lleva un objeto con los componentes que se van a utilizar en este componente.
-    components: { Home },
-    data() {
-        return {
-            user: {
-                id: null,
-                email: null,
-            }
-        }
-    },
-    methods: {
-        // handleLogin(userData) {
-        //     this.user = userData;
-        // }
-        handleLogout() {
-            logout();
-        }
-    },
-    async mounted() {
-        // Nos suscribimos al estado de autenticación.
-        // TODO: Proteger las rutas, y hacer el perfil del usuario :)
-        subscribeToAuth(userData => this.user = userData);
-    }
+    components: { Home, MainNav },
+    // data() {
+    //     return {
+    //         user: {
+    //             id: null,
+    //             email: null,
+    //         }
+    //     }
+    // },
+    // methods: {
+    //     // handleLogin(userData) {
+    //     //     this.user = userData;
+    //     // }
+    //     handleLogout() {
+    //         logout();
+    //     }
+    // },
+    // async mounted() {
+    //     // Nos suscribimos al estado de autenticación.
+    //     // TODO: Hacer el perfil del usuario :)
+    //     subscribeToAuth(userData => this.user = userData);
+    // }
 }
 </script>
 
@@ -58,11 +59,10 @@ export default {
             padding-top: .5rem      => pt-2
             background-color: #fff  => bg-white
     -->
-    <nav class="flex gap-8 p-4 bg-slate-300">
+    <!-- <nav class="flex gap-8 p-4 bg-slate-300">
         <router-link class="text-lg" to="/">DV Social</router-link>
         <ul class="flex gap-4">
             <li>
-                <!-- <RouterLink to="/">Home</RouterLink> -->
                 <router-link to="/">Home</router-link>
             </li>
             <template v-if="user.id === null">
@@ -87,7 +87,8 @@ export default {
                 </li>
             </template>
         </ul>
-    </nav>
+    </nav> -->
+    <MainNav />
     <div class="container mx-auto p-4">
         <!-- Agregamos el listener del evento login del componente Login. -->
         <!-- <router-view

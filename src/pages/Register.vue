@@ -17,6 +17,7 @@ export default {
         async handleSubmit() {
             try {
                 await register(this.user.email, this.user.password);
+                this.$router.push('/chat-global');
             } catch (error) {
                 // TODO: Manejar el error.
                 console.error('[Register handleSubmit] Error al registrarnos: ', error);
