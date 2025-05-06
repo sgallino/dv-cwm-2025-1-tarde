@@ -2,10 +2,12 @@
 import { nextTick } from 'vue';
 import MainH1 from '../components/MainH1.vue';
 import { getLastMessages, saveGlobalChatMessage, subscribeToGlobalChatNewMessages } from '../services/global-chat';
+import { subscribeToAuth } from '../services/auth';
+import MainLoader from '../components/MainLoader.vue';
 
 export default {
     name: 'GlobalChat',
-    components: { MainH1 },
+    components: { MainH1, MainLoader },
     /*
     En los componentes de Vue que usan la Options API, definen su "state" (sus datos internos que pueden mutar) a través
     de la propiedad "data".
@@ -15,9 +17,18 @@ export default {
     data: function() {
         return {
             messages: [],
+            loadingMessages: true,
+
             newMessage: {
-                email: '',
                 body: '',
+            },
+
+            user: {
+                id: null,
+                email: null,
+                bio: null,
+                display_name: null,
+                career: null,
             }
         }
     },
@@ -32,7 +43,12 @@ export default {
     methods: {
         async sendMessage() {
             try {
-                await saveGlobalChatMessage({...this.newMessage});
+                await saveGlobalChatMessage({
+                    body: this.newMessage.body,
+                    // Los datos que identifican al usuario los sacamos del usuario autenticado.
+                    user_id: this.user.id,
+                    email: this.user.email,
+                });
                 // Versión para 'Broadcast'.
                 // const message = {
                 //     id: this.messages.length + 1,
@@ -49,6 +65,8 @@ export default {
         },
     },
     async mounted() {
+        subscribeToAuth(newUser => this.user = newUser);
+
         // Pedimos recibir los nuevos mensajes para agregarlos en el array de mensajes.
         subscribeToGlobalChatNewMessages(async newMessageReceived => {
             this.messages.push(newMessageReceived);
@@ -59,6 +77,7 @@ export default {
         // Traemos los mensajes iniciales.
         try {
             this.messages = await getLastMessages();
+            this.loadingMessages = false;
 
             // Movemos el scroll del elemento del contenedor del chat al final.
             console.log(this.$refs.chatContainer);
@@ -93,16 +112,31 @@ export default {
         >
             <h2 class="sr-only">Lista de Mensajes</h2>
 
-            <ul>
+            <ul
+                v-if="!loadingMessages"
+            >
                 <li 
                     v-for="message in messages"
                     class="flex flex-col gap-1 mb-4"
                 >
-                    <div><b>{{ message.email }}</b> dijo:</div>
+                    <div>
+                        <router-link 
+                            :to="`/usuario/${message.user_id}`"
+                            class="text-blue-700 font-bold underline"
+                        >
+                            {{ message.email }}
+                        </router-link>
+                        dijo:
+                    </div>
                     <div>{{ message.body }}</div>
                     <div class="text-sm text-gray-600">{{ message.created_at }}</div>
                 </li>
             </ul>
+            <div 
+                v-else
+            >
+                <MainLoader />
+            </div>
         </div>
         <div class="col-3/12 p-4">
             <h2 class="mb-4 text-2xl">Enviar un mensaje</h2>
@@ -121,21 +155,16 @@ export default {
                 @submit.prevent="() => sendMessage()"
             >
                 <div class="mb-4">
-                    <label for="email" class="block mb-2">Email:</label>
+                    <div class="block mb-2">Email:</div>
+                    <div class="font-bold">{{ user.email }}</div>
+                </div>
+                <div class="mb-4">
+                    <label for="body" class="block mb-2">Mensaje:</label>
                     <!-- 
                     v-model es una directiva que agrega un evento y un bindeo para generar un "two-way data binding".
                     "Two-day data binding" significa que quedan vinculados el valor del state y el valor del input,
                     de manera tal que si uno cambia, el otro se actualiza automáticamente.
                     -->
-                    <input
-                        type="email"
-                        id="email"
-                        class="w-full px-4 py-2 border border-gray-400 rounded"
-                        v-model="newMessage.email"
-                    >
-                </div>
-                <div class="mb-4">
-                    <label for="body" class="block mb-2">Mensaje:</label>
                     <textarea
                         id="body"
                         class="w-full px-4 py-2 border border-gray-400 rounded"

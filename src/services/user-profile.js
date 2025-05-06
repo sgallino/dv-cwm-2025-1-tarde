@@ -14,11 +14,10 @@ export async function addUserProfile(data) {
     if(error) {
         console.error('[user-profile.js addUserProfile] No se pudo crear el perfi: ', error);
         
-        throw new Error('No se pudo crear el perfil:' . error);
+        throw new Error('No se pudo crear el perfil:' + error);
     }
 }
 
-// TODO: Hacer el editar perfil de usuarios.
 /**
  * 
  * @param {string} id 
@@ -30,11 +29,11 @@ export async function updateUserProfile(id, data) {
         .update({...data})
         .eq('id', id);
     
-        if(error) {
-            console.error('[user-profile.js updateUserProfile] No se pudo editar el perfil: ', error);
-            
-            throw new Error('No se pudo editar el perfil:' . error);
-        }
+    if(error) {
+        console.error('[user-profile.js updateUserProfile] No se pudo editar el perfil: ', error);
+        
+        throw new Error('No se pudo editar el perfil:' + error);
+    }
 }
 
 /**
@@ -47,13 +46,16 @@ export async function getUserProfileByPK(id) {
         .from('user_profiles')
         .select()
         .eq('id', id);
+
     if(error) {
-        console.error('[user-profile.js addUserProfile] No se pudo crear el perfil, ya que hay uno o más errores en el valor recibido.', error);
+        console.error('[user-profile.js getUserProfileByPK] No se pudo traer el perfil, ya que hay uno o más errores en el valor recibido.', error);
         
-        throw new Error('No se pudo crear el perfil, ya que hay uno o más errores en el valor recibido.' . error);
+        throw new Error('No se pudo traer el perfil, ya que hay uno o más errores en el valor recibido.' + error);
     }
 
-    return {
-        ...data,
-    }
+    // Siempre que hacemos un select de Supabase se nos retorna un array como resultado, indistintamente de si hay
+    // uno o más resultados.
+    // Si sabemos, como en este caso, que solo puede llegar un único resultado como respuesta, entonces podemos
+    // hard-codear la posición 0 del array.
+    return data[0];
 }

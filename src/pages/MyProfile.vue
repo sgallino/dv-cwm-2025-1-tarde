@@ -10,6 +10,9 @@ export default {
             user: {
                 id: null,
                 email: null,
+                bio: null,
+                display_name: null,
+                career: null,
             },
         }
     },
@@ -20,15 +23,22 @@ export default {
 </script>
 
 <template>
-    <MainH1>Mi perfil</MainH1>
-    <div class="mb-4 italic">Acá tu mini-biografía.</div>
+    <div class="flex gap-4 items-end">
+        <MainH1>Mi perfil</MainH1>
+        <router-link
+            to="/mi-perfil/editar"
+            class="pb-4 text-blue-700"
+        >Editar</router-link>
+    </div>
+    
+    <div class="mb-4 italic">{{ user.bio || 'Acá va tu mini-biografía...' }}</div>
 
     <dl>
         <dt><b>Email</b></dt>
-        <dd>{{ user.email }}</dd>
+        <dd class="mb-2">{{ user.email }}</dd>
         <dt><b>Nombre</b></dt>
-        <dd><i>Acá va el nombre</i></dd>
+        <dd class="mb-2">{{ user.display_name || 'No especificado' }}</dd>
         <dt><b>Carrera</b></dt>
-        <dd><i>Acá va la carrera</i></dd>
+        <dd class="mb-2">{{ user.career || 'No especificada' }}</dd>
     </dl>
 </template>

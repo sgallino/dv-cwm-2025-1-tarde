@@ -1,5 +1,5 @@
 import supabase from "./supabase";
-import { addUserProfile } from "./user-profile";
+import { addUserProfile, getUserProfileByPK, updateUserProfile } from "./user-profile";
 
 /*
     # Patrón de diseño: Observer
@@ -29,6 +29,9 @@ import { addUserProfile } from "./user-profile";
 let user = {
     id: null,
     email: null,
+    bio: null,
+    display_name: null,
+    career: null,
 }
 // Definimos un array para la lista de observers.
 let observers = [];
@@ -36,6 +39,9 @@ let observers = [];
 // Invocamos la carga del usuario actual inmediatamente.
 loadCurrentUser();
 
+/**
+ * 
+ */
 async function loadCurrentUser() {
     const { data } = await supabase.auth.getUser();
 
@@ -47,12 +53,25 @@ async function loadCurrentUser() {
         id: data.user.id,
         email: data.user.email,
     });
-    // user = {
-    //     ...user,
-    //     id: data.user.id,
-    //     email: data.user.email,
-    // }
-    // notifyAll();
+
+    // Cargamos el perfil del usuario. Esto lo dejamos corriendo en paralelo (noten que no está el await).
+    loadCurrentUserProfile();
+}
+
+/**
+ * Carga el perfil extendido del usuario autenticado.
+ */
+async function loadCurrentUserProfile() {
+    try {
+        const profile = await getUserProfileByPK(user.id);
+        
+        updateUser({
+            ...profile,
+        });
+    } catch (error) {
+        console.error('[auth.js loadCurrentUserProfile] Error al obtener el perfil del usuario: ', error);
+        throw error;
+    }
 }
 
 /**
@@ -89,12 +108,6 @@ export async function register(email, password) {
         id: data.user.id,
         email: data.user.email,
     });
-    // user = {
-    //     ...user,
-    //     id: data.user.id,
-    //     email: data.user.email,
-    // }
-    // notifyAll();
 
     return data.user;
 }
@@ -115,12 +128,9 @@ export async function login(email, password) {
         id: data.user.id,
         email: data.user.email,
     });
-    // user = {
-    //     ...user,
-    //     id: data.user.id,
-    //     email: data.user.email,
-    // }
-    // notifyAll();
+
+    // Cargamos el resto del perfil.
+    loadCurrentUserProfile();
 
     return data.user;
 }
@@ -138,6 +148,21 @@ export async function logout() {
     //     email: null,
     // }
     // notifyAll();
+}
+
+/**
+ * Actualiza el perfil del usuario autenticado.
+ * 
+ * @param {{bio: string|null, career: string|null, display_name: string|null}} data 
+ */
+export async function updateAuthProfile(data) {
+    try {
+        await updateUserProfile(user.id, { ...data });
+        updateUser(data);
+    } catch (error) {
+        console.error('[auth.js updateAuthProfile] Error al actualizar el perfil del usuario autenticado: ', error);
+        throw error;
+    }
 }
 
 /*--------------------------------------------------------------------
