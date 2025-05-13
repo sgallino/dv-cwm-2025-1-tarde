@@ -2,14 +2,15 @@
 Archivo del router de nuestra aplicación.
 */
 import { createRouter, createWebHistory } from 'vue-router';
+import { subscribeToAuth } from '../services/auth';
 import Home from '../pages/Home.vue';
 import GlobalChat from '../pages/GlobalChat.vue';
 import Login from '../pages/Login.vue';
 import Register from '../pages/Register.vue';
-import { subscribeToAuth } from '../services/auth';
 import MyProfile from '../pages/MyProfile.vue';
 import MyProfileEdit from '../pages/MyProfileEdit.vue';
 import UserProfile from '../pages/UserProfile.vue';
+import PrivateChat from '../pages/PrivateChat.vue';
 
 // Definimos las rutas de nuestra aplicación.
 // Los campos "meta" de las rutas aceptan un objeto con cualquier dato. Ese dato va a quedar asociado a la ruta.
@@ -22,6 +23,7 @@ const routes = [
     { path: '/mi-perfil',           component: MyProfile,       meta: { requiresAuth: true, }, },
     { path: '/mi-perfil/editar',    component: MyProfileEdit,   meta: { requiresAuth: true, }, },
     { path: '/usuario/:id',         component: UserProfile,     meta: { requiresAuth: true, }, },
+    { path: '/usuario/:id/chat',    component: PrivateChat,     meta: { requiresAuth: true, }, },
 ];
 
 // Creamos el router.

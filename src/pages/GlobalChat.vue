@@ -4,10 +4,11 @@ import MainH1 from '../components/MainH1.vue';
 import { getLastMessages, saveGlobalChatMessage, subscribeToGlobalChatNewMessages } from '../services/global-chat';
 import { subscribeToAuth } from '../services/auth';
 import MainLoader from '../components/MainLoader.vue';
+import MainButton from '../components/MainButton.vue';
 
 export default {
     name: 'GlobalChat',
-    components: { MainH1, MainLoader },
+    components: { MainH1, MainLoader, MainButton },
     /*
     En los componentes de Vue que usan la Options API, definen su "state" (sus datos internos que pueden mutar) a través
     de la propiedad "data".
@@ -171,7 +172,7 @@ export default {
                         v-model="newMessage.body"
                     ></textarea>
                 </div>
-                <button type="submit" class="transition px-4 py-2 rounded bg-blue-600 hover:bg-blue-500 focus:bg-blue-500 text-white">Enviar</button>
+                <MainButton>Enviar</MainButton>
             </form>
         </div>
     </div>

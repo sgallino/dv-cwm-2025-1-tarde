@@ -39,6 +39,13 @@ let observers = [];
 // Invocamos la carga del usuario actual inmediatamente.
 loadCurrentUser();
 
+// Preguntamos si hay un usuario autenticado en nuestras credenciales locales. Si lo hay, lo marcamos como autenticado.
+// Esto no reemplaza la verificación posterior que hace Supabase, sino que es simplemente para facilitar el reload de
+// la web.
+if(localStorage.getItem('user')) {
+    user = JSON.parse(localStorage.getItem('user'));
+}
+
 /**
  * 
  */
@@ -175,6 +182,8 @@ export async function updateAuthProfile(data) {
  * @param {({id: string|null, email: string|null}) => void} callback 
  */
 export async function subscribeToAuth(callback) {
+    // TODO: Unsubscribe
+
     // Guardamos el observer en el array.
     observers.push(callback);
 
@@ -209,6 +218,11 @@ function updateUser(data) {
     user = {
         ...user,
         ...data,
+    }
+    if(user.id !== null) {
+        localStorage.setItem('user', JSON.stringify(user));
+    } else {
+        localStorage.removeItem('user');
     }
     notifyAll();
 }

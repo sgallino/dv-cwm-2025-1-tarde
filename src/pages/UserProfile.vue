@@ -43,7 +43,7 @@ export default {
         
         <div class="mb-4 italic">{{ user.bio || 'Acá va tu mini-biografía...' }}</div>
 
-        <dl>
+        <dl class="mb-4">
             <dt><b>Email</b></dt>
             <dd class="mb-2">{{ user.email }}</dd>
             <dt><b>Nombre</b></dt>
@@ -51,6 +51,13 @@ export default {
             <dt><b>Carrera</b></dt>
             <dd class="mb-2">{{ user.career || 'No especificada' }}</dd>
         </dl>
+
+        <hr class="mb-4">
+
+        <RouterLink 
+            :to="`/usuario/${user.id}/chat`"
+            class="text-blue-700"
+        >Iniciar una conversación privada con {{ user.email }}</RouterLink>
     </div>
     <MainLoader v-else />
 </template>
