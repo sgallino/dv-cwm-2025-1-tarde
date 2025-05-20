@@ -6,6 +6,9 @@ import MainLabel from '../components/MainLabel.vue';
 import MainLoader from '../components/MainLoader.vue';
 import { subscribeToAuth, updateAuthProfile } from '../services/auth';
 
+// Definimos una variable para poder guardar la función para cancelar la suscripción de la autenticación.
+let unsubscribeAuth = () => {};
+
 export default {
     name: 'MyProfileEdit',
     components: { MainH1, MainLoader, MainLabel, MainInput, MainButton },
@@ -40,7 +43,7 @@ export default {
         }
     },
     mounted() {
-        subscribeToAuth(newUserData => {
+        unsubscribeAuth = subscribeToAuth(newUserData => {
             this.user = newUserData;
             // Asignamos los datos del perfil extendido a los del form.
             this.profile = {
@@ -49,6 +52,10 @@ export default {
                 career: this.user.career,
             }
         }); // TODO: Unsub
+    },
+    unmounted() {
+        // Cancelamos la ssuscripción.
+        unsubscribeAuth();
     }
 }
 </script>

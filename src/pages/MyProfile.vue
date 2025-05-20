@@ -2,6 +2,9 @@
 import MainH1 from '../components/MainH1.vue';
 import { subscribeToAuth } from '../services/auth';
 
+// Definimos una variable para poder guardar la función para cancelar la suscripción de la autenticación.
+let unsubscribeAuth = () => {};
+
 export default {
     name: 'MyProfile',
     components: { MainH1 },
@@ -17,7 +20,12 @@ export default {
         }
     },
     mounted() {
-        subscribeToAuth(newUserData => this.user = newUserData);
+        // Capturamos la función que cancela la suscripción.
+        unsubscribeAuth = subscribeToAuth(newUserData => this.user = newUserData);
+    },
+    unmounted() {
+        // Cancelamos la ssuscripción.
+        unsubscribeAuth();
     }
 }
 </script>

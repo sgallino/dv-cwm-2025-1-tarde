@@ -178,17 +178,26 @@ export async function updateAuthProfile(data) {
 /**
  * Registra un "observer" que será notificado con los datos del usuario cada vez que el estado de autenticación, o los
  * datos del usuario, cambien.
+ * Retorna una función para cancelar la suscripción.
  * 
  * @param {({id: string|null, email: string|null}) => void} callback 
+ * @returns {() => void} Función para cancelar la suscripción.
  */
-export async function subscribeToAuth(callback) {
-    // TODO: Unsubscribe
-
+export function subscribeToAuth(callback) {
     // Guardamos el observer en el array.
     observers.push(callback);
 
+    // console.log('[auth.js subscribeToAuth] Observer agregado. El stack actual es: ', observers);
+
     // Notificamos al observer de los datos actuales.
     notify(callback);
+
+    return () => {
+        // Para limpiar el observer, nos quedamos con la lista de observers removiendo el que acabamos de pushear.
+        observers = observers.filter(obs => obs !== callback);
+        
+        // console.log('[auth.js unsubscribe] Removiendo un observer del stack. El stack actual queda: ', observers);
+    }
 }
 
 /**

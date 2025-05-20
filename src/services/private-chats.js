@@ -1,12 +1,27 @@
 import supabase from "./supabase";
 
 /**
+ * Guardamos el id de cada chat privado, usando como clave un string con el formato de:
+ * 'userid1_userid2'
+ */
+let privateChatsIdsCache = {};
+
+// Traemos los ids de los chats privados que tenemos cacheados en localStorage.
+if(localStorage.getItem('privateChatsIdsCache')) {
+    privateChatsIdsCache = JSON.parse(localStorage.getItem('privateChatsIdsCache'));
+}
+
+/**
  * 
  * @param {string} sender_id 
  * @param {string} receiver_id 
  * @returns {Promise<number>}
  */
 async function getPrivateChat(sender_id, receiver_id) {
+    const cacheKey = [sender_id, receiver_id].sort().join('_');
+    // Si tenemos el id cacheado, lo podemos retornar inmediatamente.
+    if(privateChatsIdsCache[cacheKey]) return privateChatsIdsCache[cacheKey];
+
     // Buscamos el chat privado.
     let chat_id = await fetchPrivateChat(sender_id, receiver_id);
 
@@ -14,6 +29,10 @@ async function getPrivateChat(sender_id, receiver_id) {
     if(!chat_id) {
         chat_id = await createPrivateChat(sender_id, receiver_id);
     }
+
+    // Guardamos el id del chat en el cache.
+    privateChatsIdsCache[cacheKey] = chat_id;
+    localStorage.setItem('privateChatsIdsCache', JSON.stringify(privateChatsIdsCache));
 
     return chat_id;
 }
@@ -116,7 +135,28 @@ export async function subscribeToPrivateChatMessages(sender_id, receiver_id, cal
         }
     );
     privateChannel.subscribe();
+}
 
-    // TODO: Cargar los mensajes iniciales del chat. Estilizar el chat. Optimizar para no buscar el id del chat una y 
-    // otra vez. Unsubscribe y limpieza de recursos.
+/**
+ * 
+ * @param {string} sender_id 
+ * @param {string} receiver_id 
+ * @returns {Promise<{id: string, chat_id: number, sender_id: string, body: string, created_at: string}[]>}
+ */
+export async function getLastPrivateChatMessages(sender_id, receiver_id) {
+    const chat_id = await getPrivateChat(sender_id, receiver_id);
+
+    const { data, error } = await supabase
+        .from('private_messages')
+        .select()
+        .eq('chat_id', chat_id)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+    if(error) {
+        console.error('[private-chat.js getLastPrivateChatMessages] Error al traer los mensajes: ', error);
+        throw error;
+    }
+
+    return data.reverse();
 }

@@ -6,6 +6,9 @@ import { subscribeToAuth } from '../services/auth';
 import MainLoader from '../components/MainLoader.vue';
 import MainButton from '../components/MainButton.vue';
 
+// Definimos una variable para poder guardar la función para cancelar la suscripción de la autenticación.
+let unsubscribeAuth = () => {};
+
 export default {
     name: 'GlobalChat',
     components: { MainH1, MainLoader, MainButton },
@@ -66,7 +69,7 @@ export default {
         },
     },
     async mounted() {
-        subscribeToAuth(newUser => this.user = newUser);
+        unsubscribeAuth = subscribeToAuth(newUser => this.user = newUser);
 
         // Pedimos recibir los nuevos mensajes para agregarlos en el array de mensajes.
         subscribeToGlobalChatNewMessages(async newMessageReceived => {
@@ -99,6 +102,9 @@ export default {
         } catch (error) {
             // TODO:
         }
+    },
+    unmounted() {
+        unsubscribeAuth();
     }
 }
 </script>

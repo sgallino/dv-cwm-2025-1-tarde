@@ -1,4 +1,4 @@
-<script>
+<!-- <script>
 export default {
     name: 'MainButton',
     props: {
@@ -25,6 +25,33 @@ export default {
         }
     }
 }
+</script> -->
+<script setup>
+import { computed } from 'vue';
+
+// Para declarar y recibir las propiedades que un componente acepta, tenemos que usar la "macro" defineProps().
+const props = defineProps({
+    type: {
+        type: String,
+        default: 'primary',
+    }
+});
+
+// Para las propiedadas computadas, usamos la función del core de Vue "computed()", que recibe un callback con la
+// lógica que le corresponde.
+const colorClasses = computed(() => {
+    // Noten que las "props" no son "refs", por lo que no llevan el ".value".
+    switch(props.type) {
+        case 'error':
+            return 'bg-red-600 hover:bg-red-500 focus:bg-red-500';
+
+        case 'success':
+            return 'bg-green-600 hover:bg-green-500 focus:bg-green-500';
+        
+        default:
+            return 'bg-blue-600 hover:bg-blue-500 focus:bg-blue-500';
+    }
+});
 </script>
 
 <template>
