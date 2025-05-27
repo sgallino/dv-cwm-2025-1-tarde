@@ -1,36 +1,36 @@
-<script>
+<script setup>
+import { onMounted, ref } from 'vue';
 import MainH1 from '../components/MainH1.vue';
 import MainLoader from '../components/MainLoader.vue';
 import { getUserProfileByPK } from '../services/user-profile';
+import { useRoute } from 'vue-router';
 
-export default {
-    name: 'UserProfile',
-    components: { MainH1, MainLoader },
-    data() {
-        return {
-            user: {
-                id: null,
-                email: null,
-                bio: null,
-                display_name: null,
-                career: null,
-            },
-            loading: false,
-        }
-    },
-    async mounted() {
-        // Cargamos el perfil del usuario que se está pidiendo ver.
-        // Usamos el parámetro "id" de la ruta.
-        // Recordamos: Cuando usamos Vue Router, los componentes que usen la Options API van a tener dos propiedades
-        // ya definidas llamadas $route y $router, que van a tener acceso a la ruta actual y a la instancia del Vue Router,
-        // respectivamente.
+const route = useRoute();
+const { user, loading } = useUserProfile(route.params.id);
+
+function useUserProfile(id) {
+    const user = ref({
+        id: null,
+        email: null,
+        bio: null,
+        display_name: null,
+        career: null,
+    });
+    const loading = ref(false);
+
+    onMounted(async () => {
         try {
-            this.loading = true;
-            this.user = await getUserProfileByPK(this.$route.params.id);
-            this.loading = false;
+            loading.value = true;
+            user.value = await getUserProfileByPK(id);
+            loading.value = false;
         } catch (error) {
-            
+            // TODO...
         }
+    });
+
+    return {
+        user,
+        loading,
     }
 }
 </script>

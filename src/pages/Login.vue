@@ -1,36 +1,31 @@
-<script>
+<script setup>
+import { ref } from 'vue';
 import MainH1 from '../components/MainH1.vue';
 import { login } from '../services/auth';
+import { useRouter } from 'vue-router';
 
-export default {
-    name: 'Login',
-    components: { MainH1 },
-    data() {
-        return {
-            user: {
-                email: '',
-                password: '',
-            }
+const router = useRouter();
+const { user, handleSubmit } = useLoginForm(router);
+
+function useLoginForm(router) {
+    const user = ref({
+        email: '',
+        password: '',
+    });
+
+    async function handleSubmit() {
+        try {
+            await login(user.value.email, user.value.password);
+            router.push('/mi-perfil');
+        } catch (error) {
+            // TODO: Manejar el error.
+            console.error('[Login handleSubmit] Error al iniciar sesión: ', error);
         }
-    },
-    methods: {
-        async handleSubmit() {
-            try {
-                const user = await login(this.user.email, this.user.password);
-                // console.log("Usuario autenticado: ", user);
+    }
 
-                this.$router.push('/chat-global');
-
-                // Podemos emitir un evento "login" que pase la data del usuario autenticado.
-                // this.$emit nos permite hacer que el componente emita un evento arbitrario al componente contenedor.
-                // Recibe como primer argumento un string con el nombre del evento (puede ser lo que quieran), y como
-                // segundo el valor que quieren que acompañe.
-                // this.$emit('login', {id: user.id, email: user.email});
-            } catch (error) {
-                // TODO: Manejar el error.
-                console.error('[Login handleSubmit] Error al iniciar sesión: ', error);
-            }
-        }
+    return {
+        user,
+        handleSubmit,
     }
 }
 </script>

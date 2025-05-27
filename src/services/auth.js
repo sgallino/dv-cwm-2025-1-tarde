@@ -149,6 +149,9 @@ export async function logout() {
     updateUser({
         id: null,
         email: null,
+        bio: null,
+        display_name: null,
+        career: null,
     });
     // user = {
     //     id: null,
