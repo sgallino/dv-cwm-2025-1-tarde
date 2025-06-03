@@ -1,76 +1,75 @@
-<script>
-import { nextTick } from 'vue';
+<script setup>
+import { nextTick, onMounted, ref, useTemplateRef } from 'vue';
 import MainH1 from '../components/MainH1.vue';
 import { getLastMessages, saveGlobalChatMessage, subscribeToGlobalChatNewMessages } from '../services/global-chat';
-import { subscribeToAuth } from '../services/auth';
 import MainLoader from '../components/MainLoader.vue';
 import MainButton from '../components/MainButton.vue';
+import useAuthUserState from '../composables/useAuthStateUser';
+import useScroll from '../composables/useScroll';
 
-// Definimos una variable para poder guardar la función para cancelar la suscripción de la autenticación.
-let unsubscribeAuth = () => {};
+const { user } = useAuthUserState();
+const { newMessage, sendMessage } = useGlobalChatForm(user);
+const { messages, loadingMessages } = useGlobalChatMessages();
 
-export default {
-    name: 'GlobalChat',
-    components: { MainH1, MainLoader, MainButton },
-    /*
-    En los componentes de Vue que usan la Options API, definen su "state" (sus datos internos que pueden mutar) a través
-    de la propiedad "data".
-    Esta propiedad debe ser una función que retorne un objeto con los datos del "state" que queremos, y sus valores
-    iniciales.
-    */
-    data: function() {
-        return {
-            messages: [],
-            loadingMessages: true,
+function useGlobalChatMessages() {
+    const messages = ref([]);
+    const loadingMessages = ref(true);
+    const container = useTemplateRef('chatContainer');
+    // const { moveScrollToBottom } = useScroll(container);
+    async function moveScrollToBottom() {
+        await nextTick();
+        container.value.scrollTop = container.value.scrollHeight;
+    }
 
-            newMessage: {
-                body: '',
-            },
+    onMounted(async () => {
+        subscribeToGlobalChatNewMessages(async newMessageReceived => {
+            messages.value.push(newMessageReceived);
+            await moveScrollToBottom();
+        });
 
-            user: {
-                id: null,
-                email: null,
-                bio: null,
-                display_name: null,
-                career: null,
-            }
+        try {
+            messages.value = await getLastMessages();
+            loadingMessages.value = false;
+
+            await moveScrollToBottom();
+        } catch (error) {
+            // TODO: 
         }
-    },
-    // data: () => {
-    //     return {}
-    // }
-    // data() {
-    //     return {
+    });
 
-    //     }
-    // }
-    methods: {
-        async sendMessage() {
-            try {
-                await saveGlobalChatMessage({
-                    body: this.newMessage.body,
-                    // Los datos que identifican al usuario los sacamos del usuario autenticado.
-                    user_id: this.user.id,
-                    email: this.user.email,
-                });
-                // Versión para 'Broadcast'.
-                // const message = {
-                //     id: this.messages.length + 1,
-                //     email: this.newMessage.email,
-                //     body: this.newMessage.body,
-                //     created_at: new Date(),
-                // };
-                // await saveGlobalChatMessage(message);
-                this.newMessage.body = "";
-            } catch (error) {
-                // TODO: Manage the error.
-                console.error("[GlobalChat.vue sendMessage] Error al enviar el mensaje: ", error);
-            }
-        },
-    },
+    return {
+        messages,
+        loadingMessages,
+    }
+}
+
+function useGlobalChatForm(user) {
+    const newMessage = ref({
+        body: '',
+    });
+
+    async function sendMessage() {
+        try {
+            await saveGlobalChatMessage({
+                body: newMessage.value.body,
+                user_id: user.value.id,
+                email: user.value.email,
+            });
+            newMessage.value.body = '';
+        } catch (error) {
+            // TODO...
+            console.error("[GlobalChat.vue sendMessage] Error al enviar el mensaje: ", error);
+        }
+    }
+
+    return {
+        newMessage,
+        sendMessage,
+    }
+}
+
+/*
     async mounted() {
-        unsubscribeAuth = subscribeToAuth(newUser => this.user = newUser);
-
         // Pedimos recibir los nuevos mensajes para agregarlos en el array de mensajes.
         subscribeToGlobalChatNewMessages(async newMessageReceived => {
             this.messages.push(newMessageReceived);
@@ -103,10 +102,7 @@ export default {
             // TODO:
         }
     },
-    unmounted() {
-        unsubscribeAuth();
-    }
-}
+}*/
 </script>
 
 <template>

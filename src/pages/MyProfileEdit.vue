@@ -1,47 +1,56 @@
-<script>
+<script setup>
+import { onMounted, ref } from 'vue';
 import MainButton from '../components/MainButton.vue';
 import MainH1 from '../components/MainH1.vue';
 import MainInput from '../components/MainInput.vue';
 import MainLabel from '../components/MainLabel.vue';
 import MainLoader from '../components/MainLoader.vue';
-import { subscribeToAuth, updateAuthProfile } from '../services/auth';
+import useAuthUserState from '../composables/useAuthStateUser';
+import { updateAuthProfile } from '../services/auth';
 
 // Definimos una variable para poder guardar la función para cancelar la suscripción de la autenticación.
-let unsubscribeAuth = () => {};
+const { user } = useAuthUserState();
+const { profile, updating, handleSubmit } = useProfileEditForm(user);
 
-export default {
-    name: 'MyProfileEdit',
-    components: { MainH1, MainLoader, MainLabel, MainInput, MainButton },
-    data() {
-        return {
-            user: {
-                id: null,
-                email: null,
-            },
-            profile: {
-                bio: '',
-                display_name: '',
-                career: '',
-            },
-            updating: false,
-        }
-    },
-    methods: {
-        async handleSubmit() {
-            // Si ya estamos trabajando, entonces no hacemos nada.
-            if(this.updating) return;
+function useProfileEditForm(authUser) {
+    const profile = ref({
+        bio: '',
+        display_name: '',
+        career: '',
+    });
+    const updating = ref(false);
 
-            try {
-                this.updating = true;
-                await updateAuthProfile({
-                    ...this.profile
-                });
-                this.updating = false;
-            } catch (error) {
-                // TODO: ...
-            }
+    async function handleSubmit() {
+        if(updating.value) return;
+
+        try {
+            updating.value = true;
+            updateAuthProfile({
+                // bio: profile.value.bio,
+                // display_name: profile.value.display_name,
+                // career: profile.value.career,
+                ...profile.value
+            });
+        } catch (error) {
+            // TODO...
         }
-    },
+        updating.value = false;
+    }
+
+    onMounted(() => profile.value = {
+        bio: authUser.value.bio,
+        display_name: authUser.value.display_name,
+        career: authUser.value.career,
+    });
+
+    return {
+        profile,
+        updating,
+        handleSubmit,
+    }
+}
+
+/*
     mounted() {
         unsubscribeAuth = subscribeToAuth(newUserData => {
             this.user = newUserData;
@@ -53,11 +62,7 @@ export default {
             }
         }); // TODO: Unsub
     },
-    unmounted() {
-        // Cancelamos la ssuscripción.
-        unsubscribeAuth();
-    }
-}
+*/
 </script>
 
 <template>

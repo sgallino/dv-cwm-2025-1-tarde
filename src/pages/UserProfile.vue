@@ -1,38 +1,11 @@
 <script setup>
-import { onMounted, ref } from 'vue';
 import MainH1 from '../components/MainH1.vue';
 import MainLoader from '../components/MainLoader.vue';
-import { getUserProfileByPK } from '../services/user-profile';
 import { useRoute } from 'vue-router';
+import useUserProfile from '../composables/useUserProfile';
 
 const route = useRoute();
 const { user, loading } = useUserProfile(route.params.id);
-
-function useUserProfile(id) {
-    const user = ref({
-        id: null,
-        email: null,
-        bio: null,
-        display_name: null,
-        career: null,
-    });
-    const loading = ref(false);
-
-    onMounted(async () => {
-        try {
-            loading.value = true;
-            user.value = await getUserProfileByPK(id);
-            loading.value = false;
-        } catch (error) {
-            // TODO...
-        }
-    });
-
-    return {
-        user,
-        loading,
-    }
-}
 </script>
 
 <template>

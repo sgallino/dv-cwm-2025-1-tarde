@@ -1,83 +1,69 @@
-<script>
+<script setup>
 import MainH1 from '../components/MainH1.vue';
 import MainLoader from '../components/MainLoader.vue';
 import MainButton from '../components/MainButton.vue';
-import { subscribeToAuth } from '../services/auth';
-import { getUserProfileByPK } from '../services/user-profile';
 import { getLastPrivateChatMessages, sendPrivateChatMessage, subscribeToPrivateChatMessages } from '../services/private-chats';
-import { nextTick } from 'vue';
+import { nextTick, onMounted, ref, useTemplateRef } from 'vue';
+import useAuthUserState from '../composables/useAuthStateUser';
+import useUserProfile from '../composables/useUserProfile';
+import { useRoute } from 'vue-router';
 
-// Definimos una variable para poder guardar la función para cancelar la suscripción de la autenticación.
-let unsubscribeAuth = () => {};
+const route = useRoute();
+const { user: userAuth } = useAuthUserState();
+const { user: userChat, loading: loadingUser } = useUserProfile(route.params.id);
+// Pasamos el usuario autenticado entero en vez de solo su id para asegurarnos de que se guarde la referencia, así
+// puede actualizarse el valor cuando tengamos el usuario cargado.
+const { newMessage, sendMessage } = usePrivateChatForm(userAuth, route.params.id);
+const { messages, loading: loadingMessages } = usePrivateChatMessages(userAuth, route.params.id);
 
-export default {
-    name: 'PrivateChat',
-    components: { MainH1, MainLoader, MainButton, },
-    data() {
-        return {
-            userAuth: {
-                id: null,
-                email: null,
-                bio: null,
-                display_name: null,
-                career: null,
-            },
+function usePrivateChatMessages(userAuth, userChatId) {
+    const messages = ref([]);
+    const loading = ref(false);
+    const chatContainer = useTemplateRef('chatContainer');
 
-            // Datos del usuario con el que estamos chateando.
-            userChat: {
-                id: null,
-                email: null,
-                bio: null,
-                display_name: null,
-                career: null,
-            },
-            loadingUser: false,
-
-            messages: [],
-            loadingMessages: false,
-
-            newMessage: {
-                body: '',
-            },
-        }
-    },
-    methods: {
-        async sendMessage() {
-            try {
-                sendPrivateChatMessage(this.userAuth.id, this.userChat.id, this.newMessage.body);
-                this.newMessage.body = '';
-            } catch (error) {
-                // TODO...
-            }
-        }
-    },
-    async mounted() {
-        unsubscribeAuth = subscribeToAuth(newUserData => this.userAuth = newUserData);
-
+    onMounted(async () => {
         try {
-            this.loadingUser = true;
-            this.loadingMessages = true;
-
-            this.userChat = await getUserProfileByPK(this.$route.params.id);
-            this.loadingUser = false;
-
-            this.messages = await getLastPrivateChatMessages(this.userAuth.id, this.$route.params.id);
-            this.loadingMessages = false;
+            loading.value = true;
+            
+            messages.value = await getLastPrivateChatMessages(userAuth.value.id, userChatId);
+            loading.value = false;
             await nextTick();
-            this.$refs.chatContainer.scrollTop = this.$refs.chatContainer.scrollHeight;
+            chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
 
-            subscribeToPrivateChatMessages(this.userAuth.id, this.userChat.id, async newMessage => {
-                this.messages.push(newMessage);
-                this.loadingMessages = false;
+            subscribeToPrivateChatMessages(userAuth.value.id, userChatId, async newMessage => {
+                messages.value.push(newMessage);
                 await nextTick();
-                this.$refs.chatContainer.scrollTop = this.$refs.chatContainer.scrollHeight;
+                chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
             });
         } catch (error) {
             // TODO...
         }
-    },
-    unmounted() {
-        unsubscribeAuth();
+        loading.value = false;
+    });
+
+    return {
+        messages,
+        loading,
+    }
+}
+
+function usePrivateChatForm(userAuthId, userChatId) {
+    const newMessage = ref({
+        body: '',
+    });
+
+    async function sendMessage() {
+        try {
+            sendPrivateChatMessage(userAuthId, userChatId, newMessage.value.body);
+            newMessage.value.body = '';
+        } catch (error) {
+            // TODO...
+        }
+    }
+
+    return {
+        newMessage,
+        sendMessage,
     }
 }
 </script>
