@@ -1,3 +1,4 @@
+import { getFileURL, uploadFile } from "./storage";
 import supabase from "./supabase";
 import { addUserProfile, getUserProfileByPK, updateUserProfile } from "./user-profile";
 
@@ -171,6 +172,25 @@ export async function updateAuthProfile(data) {
         updateUser(data);
     } catch (error) {
         console.error('[auth.js updateAuthProfile] Error al actualizar el perfil del usuario autenticado: ', error);
+        throw error;
+    }
+}
+
+export async function updateAuthAvatar(file) {    
+    try {
+        // Generamos un nombre para la foto.
+        // Queremos que tenga el formato de:
+        //      {userId}/{fileName}
+        // Para el fileName vamos a querer crear un nombre único. Por ejemplo, usando la función crypt.randomUUID();
+        const name = `${user.id}/${crypto.randomUUID()}.jpg`; // TODO: Contemplar otras extensiones.
+        await uploadFile(name, file);
+        // Obtenemos la URL pública del archivo y la guardamos en el perfil del usuario.
+        await updateAuthProfile({
+            photo: getFileURL(name),
+        });
+        // TODO: Eliminar la foto vieja, si corresponde.
+    } catch (error) {
+        console.error('[auth.js updateAuthAvatar] Error al actualizar la imagen de perfil del usuario autenticado: ', error);
         throw error;
     }
 }

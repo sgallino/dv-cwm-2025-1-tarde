@@ -74,10 +74,6 @@ export async function saveGlobalChatMessage(data) {
         throw new Error(error);
     }
 }
-
-// TODO: Traer los mensajes que hay grabados para mostrarlos en pantalla, y agregar la "escucha" en tiempo real de los
-// mismos.
-
 /*
 // Versión con la API de "Broadcast" de Realtime de Supabase.
 // La API de Broadcast trabaja comunicando mensajes a todos los usuarios que estén conectados a un determinado canal.

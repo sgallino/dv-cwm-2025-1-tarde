@@ -49,20 +49,6 @@ function useProfileEditForm(authUser) {
         handleSubmit,
     }
 }
-
-/*
-    mounted() {
-        unsubscribeAuth = subscribeToAuth(newUserData => {
-            this.user = newUserData;
-            // Asignamos los datos del perfil extendido a los del form.
-            this.profile = {
-                bio: this.user.bio,
-                display_name: this.user.display_name,
-                career: this.user.career,
-            }
-        }); // TODO: Unsub
-    },
-*/
 </script>
 
 <template>

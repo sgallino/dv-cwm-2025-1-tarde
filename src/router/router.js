@@ -11,19 +11,21 @@ import MyProfile from '../pages/MyProfile.vue';
 import MyProfileEdit from '../pages/MyProfileEdit.vue';
 import UserProfile from '../pages/UserProfile.vue';
 import PrivateChat from '../pages/PrivateChat.vue';
+import MyProfileEditAvatar from '../pages/MyProfileEditAvatar.vue';
 
 // Definimos las rutas de nuestra aplicación.
 // Los campos "meta" de las rutas aceptan un objeto con cualquier dato. Ese dato va a quedar asociado a la ruta.
 // No hay ningún dato preexistente en "meta", los inventan a voluntad.
 const routes = [
-    { path: '/',                    component: Home, },
-    { path: '/ingresar',            component: Login, },
-    { path: '/registro',            component: Register, },
-    { path: '/chat-global',         component: GlobalChat,      meta: { requiresAuth: true, }, },
-    { path: '/mi-perfil',           component: MyProfile,       meta: { requiresAuth: true, }, },
-    { path: '/mi-perfil/editar',    component: MyProfileEdit,   meta: { requiresAuth: true, }, },
-    { path: '/usuario/:id',         component: UserProfile,     meta: { requiresAuth: true, }, },
-    { path: '/usuario/:id/chat',    component: PrivateChat,     meta: { requiresAuth: true, }, },
+    { path: '/',                        component: Home, },
+    { path: '/ingresar',                component: Login, },
+    { path: '/registro',                component: Register, },
+    { path: '/chat-global',             component: GlobalChat,          meta: { requiresAuth: true, }, },
+    { path: '/mi-perfil',               component: MyProfile,           meta: { requiresAuth: true, }, },
+    { path: '/mi-perfil/editar',        component: MyProfileEdit,       meta: { requiresAuth: true, }, },
+    { path: '/mi-perfil/editar/avatar', component: MyProfileEditAvatar, meta: { requiresAuth: true, }, },
+    { path: '/usuario/:id',             component: UserProfile,         meta: { requiresAuth: true, }, },
+    { path: '/usuario/:id/chat',        component: PrivateChat,         meta: { requiresAuth: true, }, },
 ];
 
 // Creamos el router.

@@ -3,7 +3,7 @@ import MainH1 from '../components/MainH1.vue';
 import MainLoader from '../components/MainLoader.vue';
 import MainButton from '../components/MainButton.vue';
 import { getLastPrivateChatMessages, sendPrivateChatMessage, subscribeToPrivateChatMessages } from '../services/private-chats';
-import { nextTick, onMounted, ref, useTemplateRef } from 'vue';
+import { nextTick, onMounted, ref, useTemplateRef, watch } from 'vue';
 import useAuthUserState from '../composables/useAuthStateUser';
 import useUserProfile from '../composables/useUserProfile';
 import { useRoute } from 'vue-router';
@@ -13,24 +13,59 @@ const { user: userAuth } = useAuthUserState();
 const { user: userChat, loading: loadingUser } = useUserProfile(route.params.id);
 // Pasamos el usuario autenticado entero en vez de solo su id para asegurarnos de que se guarde la referencia, así
 // puede actualizarse el valor cuando tengamos el usuario cargado.
-const { newMessage, sendMessage } = usePrivateChatForm(userAuth, route.params.id);
-const { messages, loading: loadingMessages } = usePrivateChatMessages(userAuth, route.params.id);
+const { newMessage, sendMessage } = usePrivateChatForm(userAuth, userChat);
+const { messages, loading: loadingMessages } = usePrivateChatMessages(userAuth, userChat);
 
-function usePrivateChatMessages(userAuth, userChatId) {
+function usePrivateChatMessages(userAuth, userChat) {
     const messages = ref([]);
-    const loading = ref(false);
+    const loading = ref(true);
     const chatContainer = useTemplateRef('chatContainer');
+
+    // Asegurándonos de tener el usuario con el que chateamos antes de realizar la búsqueda de los mensajes.
+    // Como vimos, recibir el objeto del usuario con el que chateamos tiene el problema de que busca la data en 
+    // Supabase. Y hasta que no reciba la respuesta, no tenemos el id. No hay tiempo suficiente para que Supabase
+    // me dé esa respuesta antes de que acá queramos usar ese id.
+    // Lo que podemos hacer, como una alternativa, para resolver esto, es usar un "watcher".
+    // Los "watchers" son una implementación de Vue del patrón Observer. Nos permite detectar cualquier cambio ocurrido
+    // en alguna referencia reactiva de Vue (ej: un ref()).
+    // Para crear un watcher tenemos que usar la función watch(). Esta función recibe dos parámetros:
+    // 1. La referencia que queremos observar.
+    // 2. El callback que queremos ejecutar cuando el valor cambie. Este callback va a recibir automáticamente dos
+    //  parámetros:
+    //      2a. El nuevo valor.
+    //      2b. El viejo valor.
+    // watch(userChat, async (newVal, oldVal) => {
+    //     if(newVal.id) {
+    //         try {
+    //             // loading.value = true;
+                
+    //             messages.value = await getLastPrivateChatMessages(userAuth.value.id, userChat.value.id);
+    //             loading.value = false;
+    //             await nextTick();
+    //             chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
+
+    //             subscribeToPrivateChatMessages(userAuth.value.id, userChat.value.id, async newMessage => {
+    //                 messages.value.push(newMessage);
+    //                 await nextTick();
+    //                 chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
+    //             });
+    //         } catch (error) {
+    //             // TODO...
+    //         }
+    //         loading.value = false;
+    //     }
+    // });
 
     onMounted(async () => {
         try {
             loading.value = true;
             
-            messages.value = await getLastPrivateChatMessages(userAuth.value.id, userChatId);
+            messages.value = await getLastPrivateChatMessages(userAuth.value.id, userChat.value.id);
             loading.value = false;
             await nextTick();
             chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
 
-            subscribeToPrivateChatMessages(userAuth.value.id, userChatId, async newMessage => {
+            subscribeToPrivateChatMessages(userAuth.value.id, userChat.value.id, async newMessage => {
                 messages.value.push(newMessage);
                 await nextTick();
                 chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
@@ -47,14 +82,14 @@ function usePrivateChatMessages(userAuth, userChatId) {
     }
 }
 
-function usePrivateChatForm(userAuthId, userChatId) {
+function usePrivateChatForm(userAuth, userChat) {
     const newMessage = ref({
         body: '',
     });
 
     async function sendMessage() {
         try {
-            sendPrivateChatMessage(userAuthId, userChatId, newMessage.value.body);
+            sendPrivateChatMessage(userAuth.value.id, userChat.value.id, newMessage.value.body);
             newMessage.value.body = '';
         } catch (error) {
             // TODO...

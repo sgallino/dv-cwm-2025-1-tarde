@@ -3,7 +3,7 @@ import { getUserProfileByPK } from "../services/user-profile";
 
 export default function useUserProfile(id) {
     const user = ref({
-        id: null,
+        id,
         email: null,
         bio: null,
         display_name: null,
