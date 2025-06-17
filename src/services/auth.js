@@ -1,4 +1,5 @@
-import { getFileURL, uploadFile } from "./storage";
+import { getFileExtension } from "../libraries/helpers";
+import { deleteFile, getFileURL, uploadFile } from "./storage";
 import supabase from "./supabase";
 import { addUserProfile, getUserProfileByPK, updateUserProfile } from "./user-profile";
 
@@ -33,6 +34,7 @@ let user = {
     bio: null,
     display_name: null,
     career: null,
+    photo: null,
 }
 // Definimos un array para la lista de observers.
 let observers = [];
@@ -153,6 +155,7 @@ export async function logout() {
         bio: null,
         display_name: null,
         career: null,
+        photo: null,
     });
     // user = {
     //     id: null,
@@ -168,6 +171,7 @@ export async function logout() {
  */
 export async function updateAuthProfile(data) {
     try {
+        // throw new Error('Test');
         await updateUserProfile(user.id, { ...data });
         updateUser(data);
     } catch (error) {
@@ -176,19 +180,35 @@ export async function updateAuthProfile(data) {
     }
 }
 
+/**
+ * 
+ * @param {File} file 
+ */
 export async function updateAuthAvatar(file) {    
     try {
+        // Guardamos en una variable el valor de la imagen actual, por si ncesitamos eliminarla.
+        const currentAvatarValue = user.photo;
+
         // Generamos un nombre para la foto.
         // Queremos que tenga el formato de:
         //      {userId}/{fileName}
         // Para el fileName vamos a querer crear un nombre único. Por ejemplo, usando la función crypt.randomUUID();
-        const name = `${user.id}/${crypto.randomUUID()}.jpg`; // TODO: Contemplar otras extensiones.
+        // Nota: La extensión la ponemos solo por formato, ya que para su funcionamiento no es necesario (depende del
+        // tipo MIME que ya está incluido en el File).
+        const name = `${user.id}/${crypto.randomUUID()}.${getFileExtension(file)}`;
         await uploadFile(name, file);
         // Obtenemos la URL pública del archivo y la guardamos en el perfil del usuario.
         await updateAuthProfile({
             photo: getFileURL(name),
         });
-        // TODO: Eliminar la foto vieja, si corresponde.
+        
+        // Borramos la imagen anterior, si es que existe.
+        if(currentAvatarValue) {
+            // Removemos la parte de la URL absoluta del archivo para quedarnos con solo la parte que figura después
+            // de la carpeta "avatars/".
+            const filenameToDelete = currentAvatarValue.slice(currentAvatarValue.indexOf('avatars/') + 8);
+            await deleteFile(filenameToDelete);
+        }
     } catch (error) {
         console.error('[auth.js updateAuthAvatar] Error al actualizar la imagen de perfil del usuario autenticado: ', error);
         throw error;

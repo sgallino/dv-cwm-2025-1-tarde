@@ -3,11 +3,12 @@ import { ref } from 'vue';
 import MainH1 from '../components/MainH1.vue';
 import { register } from '../services/auth';
 import { useRouter } from 'vue-router';
+import MainButton from '../components/MainButton.vue';
 
 const router = useRouter();
 
 // Invocamos los "composables" que usamos.
-const { user, handleSubmit } = useRegisterForm(router);
+const { user, loading, handleSubmit } = useRegisterForm(router);
 
 /*
 La idea de uso preferido de la Composition API es que cada responsabilidad que un componente tenga sea encapsulada en
@@ -27,19 +28,23 @@ function useRegisterForm(router) {
         email: '',
         password: '',
     });
+    const loading = ref(false);
 
     async function handleSubmit() {
         try {
+            loading.value = true;
             await register(user.value.email, user.value.password);
             router.push('/mi-perfil');
         } catch (error) {
             // TODO: Manejar el error.
             console.error('[Register handleSubmit] Error al registrarnos: ', error);
         }
+        loading.value = false;
     }
 
     return {
         user,
+        loading,
         handleSubmit,
     }
 }
@@ -71,6 +76,9 @@ function useRegisterForm(router) {
                 class="w-full px-4 py-2 border border-gray-400 rounded"
             >
         </div>
-        <button type="submit" class="transition px-4 py-2 rounded bg-blue-600 hover:bg-blue-500 focus:bg-blue-500 text-white">Crear cuenta</button>
+        <MainButton 
+            :loading="loading"
+            type="submit"
+        >Crear cuenta</MainButton>
     </form>
 </template>

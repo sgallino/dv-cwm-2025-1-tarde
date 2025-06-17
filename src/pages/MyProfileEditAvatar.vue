@@ -4,8 +4,10 @@ import MainButton from '../components/MainButton.vue';
 import MainH1 from '../components/MainH1.vue';
 import MainLabel from '../components/MainLabel.vue';
 import { updateAuthAvatar } from '../services/auth';
+import MainLoader from '../components/MainLoader.vue';
+import NotificationBox from '../components/NotificationBox.vue';
 
-const { data, updating, handleFileChange, handleSubmit } = useAvatarUploadForm();
+const { data, updating, feedback, handleFileChange, handleSubmit } = useAvatarUploadForm();
 
 function useAvatarUploadForm() {
     const data = ref({
@@ -13,6 +15,10 @@ function useAvatarUploadForm() {
         objectURL: null, // El ObjectURL para el preview de la imagen.
     });
     const updating = ref(false);
+    const feedback = ref({
+        message: null,
+        type: 'success',
+    });
 
     async function handleSubmit() {
         try {
@@ -22,8 +28,16 @@ function useAvatarUploadForm() {
 
             updating.value = true;
             await updateAuthAvatar(data.value.file);
+
+            feedback.value = {
+                message: 'La imagen de tu perfil se actualizó con éxito.',
+                type: 'success',
+            }
         } catch (error) {
-            // TODO...
+            feedback.value = {
+                message: 'Ocurrió al actualizar tu imagen de perfil. Por favor, probá de nuevo más tarde.',
+                type: 'error',
+            }
         }
         updating.value = false;
     }
@@ -79,6 +93,7 @@ function useAvatarUploadForm() {
     return {
         data,
         updating,
+        feedback,
         handleFileChange,
         handleSubmit,
     }
@@ -87,6 +102,12 @@ function useAvatarUploadForm() {
 
 <template>
     <MainH1>Editar mi imagen de perfil</MainH1>
+
+    <NotificationBox 
+        v-if="feedback.message"
+        :content="feedback" 
+        @close="() => feedback.message = null"
+    />
 
     <form 
         action="#"
@@ -114,7 +135,12 @@ function useAvatarUploadForm() {
                     class="w-full px-4 py-2 border border-gray-400 rounded"
                 >
             </div>
-            <MainButton>Cambiar imagen</MainButton>
+            <MainButton
+                :loading="updating"
+                type='submit'
+            >
+                Cambiar imagen
+            </MainButton>
         </div>
         <div class="w-1/2">
             <img

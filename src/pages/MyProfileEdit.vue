@@ -7,10 +7,11 @@ import MainLabel from '../components/MainLabel.vue';
 import MainLoader from '../components/MainLoader.vue';
 import useAuthUserState from '../composables/useAuthStateUser';
 import { updateAuthProfile } from '../services/auth';
+import NotificationBox from '../components/NotificationBox.vue';
 
 // Definimos una variable para poder guardar la función para cancelar la suscripción de la autenticación.
 const { user } = useAuthUserState();
-const { profile, updating, handleSubmit } = useProfileEditForm(user);
+const { profile, updating, feedback, handleSubmit } = useProfileEditForm(user);
 
 function useProfileEditForm(authUser) {
     const profile = ref({
@@ -19,20 +20,37 @@ function useProfileEditForm(authUser) {
         career: '',
     });
     const updating = ref(false);
+    const feedback = ref({
+        message: null,
+        type: 'success',
+        icon: 'success',
+        title: 'Éxito',
+    });
 
     async function handleSubmit() {
         if(updating.value) return;
 
         try {
             updating.value = true;
-            updateAuthProfile({
+            await updateAuthProfile({
                 // bio: profile.value.bio,
                 // display_name: profile.value.display_name,
                 // career: profile.value.career,
                 ...profile.value
             });
+            feedback.value = {
+                message: 'Los datos de tu perfil se actualizaron con éxito.',
+                type: 'success',
+                icon: 'success',
+                title: 'Éxito',
+            }
         } catch (error) {
-            // TODO...
+            feedback.value = {
+                message: 'Ocurrió un error al actualizar tus datos. Por favor, probá de nuevo más tarde.',
+                type: 'error',
+                icon: 'error',
+                title: 'Error',
+            }
         }
         updating.value = false;
     }
@@ -46,6 +64,7 @@ function useProfileEditForm(authUser) {
     return {
         profile,
         updating,
+        feedback,
         handleSubmit,
     }
 }
@@ -53,6 +72,26 @@ function useProfileEditForm(authUser) {
 
 <template>
     <MainH1>Editar mi perfil</MainH1>
+
+    <!-- <div
+        v-if="feedback.message"
+        class="p-4 mb-4"
+        :class="{
+            'bg-green-100': feedback.type == 'success',
+            'bg-red-100':   feedback.type == 'error',
+        }"
+    >
+        {{ feedback.message }}
+    </div> -->
+    <NotificationBox
+        v-if="feedback.message"
+        :content="feedback"
+        @close="() => feedback.message = null"
+    >
+        <template v-slot:header>
+            <h2 class="pb-2 mb-4 border-b text-2xl">{{ feedback.title }}</h2>
+        </template>
+    </NotificationBox>
 
     <form 
         action="#"
@@ -83,13 +122,10 @@ function useProfileEditForm(authUser) {
             />
         </div>
         <MainButton
+            :loading="updating"
             type="submit"
-            class="transition px-4 py-2 rounded bg-blue-600 hover:bg-blue-500 focus:bg-blue-500 text-white"
         >
-            <template v-if="!updating">
-                Actualizar
-            </template>
-            <MainLoader v-else />
+            Actualizar
         </MainButton>
     </form>
 </template>

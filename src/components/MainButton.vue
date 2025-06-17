@@ -28,20 +28,25 @@ export default {
 </script> -->
 <script setup>
 import { computed } from 'vue';
+import MainLoader from './MainLoader.vue';
 
 // Para declarar y recibir las propiedades que un componente acepta, tenemos que usar la "macro" defineProps().
 const props = defineProps({
-    type: {
+    variant: {
         type: String,
         default: 'primary',
-    }
+    },
+    loading: {
+        type: Boolean,
+        default: false,
+    },
 });
 
 // Para las propiedadas computadas, usamos la función del core de Vue "computed()", que recibe un callback con la
 // lógica que le corresponde.
 const colorClasses = computed(() => {
     // Noten que las "props" no son "refs", por lo que no llevan el ".value".
-    switch(props.type) {
+    switch(props.variant) {
         case 'error':
             return 'bg-red-600 hover:bg-red-500 focus:bg-red-500';
 
@@ -72,9 +77,9 @@ const colorClasses = computed(() => {
     dejar indicado en Tailwind que la clase se agreguen se necesiten o no.
     -->
     <button
-        type="submit"
         :class="`transition px-4 py-2 rounded ${colorClasses} text-white`"
     >
-        <slot />
+        <slot v-if="!loading">Enviar</slot>
+        <MainLoader v-else />
     </button>
 </template>

@@ -3,28 +3,33 @@ import { ref } from 'vue';
 import MainH1 from '../components/MainH1.vue';
 import { login } from '../services/auth';
 import { useRouter } from 'vue-router';
+import MainButton from '../components/MainButton.vue';
 
 const router = useRouter();
-const { user, handleSubmit } = useLoginForm(router);
+const { user, loading, handleSubmit } = useLoginForm(router);
 
 function useLoginForm(router) {
     const user = ref({
         email: '',
         password: '',
     });
+    const loading = ref(false);
 
     async function handleSubmit() {
         try {
+            loading.value = true;
             await login(user.value.email, user.value.password);
             router.push('/mi-perfil');
         } catch (error) {
             // TODO: Manejar el error.
             console.error('[Login handleSubmit] Error al iniciar sesión: ', error);
         }
+        loading.value = false;
     }
 
     return {
         user,
+        loading,
         handleSubmit,
     }
 }
@@ -55,6 +60,9 @@ function useLoginForm(router) {
                 class="w-full px-4 py-2 border border-gray-400 rounded"
             >
         </div>
-        <button type="submit" class="transition px-4 py-2 rounded bg-blue-600 hover:bg-blue-500 focus:bg-blue-500 text-white">Ingresar</button>
+        <MainButton 
+            :loading="loading"
+            type="submit"
+        >Ingresar</MainButton>
     </form>
 </template>
