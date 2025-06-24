@@ -73,16 +73,6 @@ function useProfileEditForm(authUser) {
 <template>
     <MainH1>Editar mi perfil</MainH1>
 
-    <!-- <div
-        v-if="feedback.message"
-        class="p-4 mb-4"
-        :class="{
-            'bg-green-100': feedback.type == 'success',
-            'bg-red-100':   feedback.type == 'error',
-        }"
-    >
-        {{ feedback.message }}
-    </div> -->
     <NotificationBox
         v-if="feedback.message"
         :content="feedback"
